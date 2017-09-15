@@ -1,24 +1,11 @@
 package org.rascalmpl.library.lang.javascript.m3;
-import jdk.nashorn.api.scripting.ScriptUtils;
-
-import jdk.nashorn.internal.runtime.ScriptEnvironment;
-import jdk.nashorn.internal.ir.FunctionNode; 
-
-import io.usethesource.vallang.IValueFactory;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
 
 import io.usethesource.vallang.IString;
+import io.usethesource.vallang.IValueFactory;
 import jdk.nashorn.internal.runtime.Context;
 import jdk.nashorn.internal.runtime.ErrorManager;
-import jdk.nashorn.internal.runtime.options.Options;
-import jdk.nashorn.internal.parser.Parser;
-import jdk.nashorn.internal.ir.visitor.SimpleNodeVisitor;
-import jdk.nashorn.internal.ir.debug.JSONWriter;
 import jdk.nashorn.internal.runtime.ScriptRuntime;
+import jdk.nashorn.internal.runtime.options.Options;
 
 public class AST {
 	String program(String file) {return "var fs = require('fs');"
