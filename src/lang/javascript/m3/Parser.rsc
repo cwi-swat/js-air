@@ -20,6 +20,7 @@ import Set;
 import String;
 import List;
 import Node;
+import Type;
 import lang::json::IO;
 import util::ShellExec;
 import ValueIO;
@@ -31,7 +32,6 @@ Program parseJavascript(loc js) {
    line2Offset = [0] + [i | i <- findAll(code, "\n")];
    str src = _parse(js, code);
    node json = parseJSON(#node, src, implicitConstructors=true, implicitNodes=true);
-   println(json);
    return buildProgram(json);
 }
 
@@ -56,26 +56,26 @@ loc L(node n) {
 private loc str2loc(str s)
   = readTextValueString(#loc, "|<s>|");
 
-Program build(node file) {
-   if (node program:=file.program) 
-     return buildProgram(program);
-   // TODO: what else?
+private &T cast(type[&T] t, value x) {
+  if (&T v := x) {
+    return v;
+  } else {
+    throw "expected <t> but got <Type::typeOf(x)>";
+  }
 }
 
-Program buildProgram(node _program) {
-   if (node _body:=_program && list[node] statements:=_body.body)
-      return program([buildStatement(statement)|statement<-statements], \loc=L(_program));
-   // TODO: no return?
-}
-    
+Program build(node file) = buildProgram(cast(#node, file.program));
 
+Program buildProgram(node _program) 
+  = program([buildStatement(statement) | statement <- cast(#list[node], _program.body)], \loc=L(_program));
+  
 Statement buildStatement(node _statement) {
     switch(_statement.\type)  {
      case "VariableDeclaration": 
       if (list[node] variableDeclarators:=_statement.declarations) {
          if (str kind:= ((_statement.kind?)?_statement.kind:"var"))
         return 
-         Statement::varDecl([buildVariableDeclarator(variableDeclarator)|node variableDeclarator<-variableDeclarators]
+         Statement::varDecl([<buildIdentifier(id), buildInit(variableDeclarator)> |node variableDeclarator<-variableDeclarators, node id := variableDeclarator.id]
             , kind, \loc=L(_statement));
             }
      case "FunctionDeclaration":
@@ -106,22 +106,22 @@ Statement buildStatement(node _statement) {
                if (node alternate :=_statement.alternate)
                   return Statement::\if(buildExpression(condition), buildStatement(consequent), buildStatement(alternate), \loc=L(_statement));
             }
-          else 
+          else  
             return Statement::\if(buildExpression(condition), buildStatement(consequent)); 
             // \switch(Expression discriminant, list[SwitchCase] cases)
      case "SwitchStatement": 
           if (node discriminant:= _statement.discriminant && list[node] cases:= _statement.cases)
                 return \switch(buildExpression(discriminant), [buildSwitchCase(\case)|node \case<-cases], \loc=L(_statement));
      case "ForStatement": {
-        ForInit forInit = ForInit::none(); 
+         forInit = empty(); 
         if (_statement.init? && node init := _statement.init) {
               if (init.\type=="VariableDeclaration" && list[node] variableDeclarators:= init.declarations 
                      && str kind:= init.kind) {
-              forInit = 
-              ForInit::varDecl([buildVariableDeclarator(variableDeclarator)|node variableDeclarator<-variableDeclarators], kind, \loc=L(_statement));
+              forInit =  
+                varDecl([<buildIdentifier(i), buildInit(variableDeclarator)>|node variableDeclarator<-variableDeclarators, node i := variableDeclarator.id], kind, \loc=L(_statement));
               }
-              else forInit = ForInit::expression(buildExpression(init), \loc=L(_statement));
-              } 
+              else forInit = expression(buildExpression(init))[\loc=L(_statement)];
+              }  
         Expression condition = undefined();
         if (_statement.\test? && node _condition := _statement.\test) {
            condition = buildExpression(_condition);
@@ -139,8 +139,10 @@ Statement buildStatement(node _statement) {
         if (node _left := _statement.left) {
               if (_left.\type=="VariableDeclaration" && list[node] variableDeclarators:= _left.declarations 
                      && str kind:= _left.kind) {
-                return forIn([buildVariableDeclarator(variableDeclarator)|node variableDeclarator<-variableDeclarators], kind 
-                ,buildExpression(_right), buildStatement(body));
+                return forIn(varDecl([<buildIdentifier(i), buildInit(variableDeclarator)>|node variableDeclarator<-variableDeclarators, node i := variableDeclarator.id]) 
+                            , kind 
+                            , buildExpression(_right)
+                            , buildStatement(body));
               }
             return forIn(buildExpression(_left),buildExpression(_right),buildStatement(body), \loc=L(_statement));
             } 
@@ -191,23 +193,21 @@ Statement buildStatement(node _statement) {
 }
     
     
-VariableDeclarator buildVariableDeclarator(node _variableDeclarator) {
+Statement buildVariableDeclarator(node _variableDeclarator) {
     if (node id:=_variableDeclarator.id)
-       return variableDeclarator(buildIdentifier(id), buildInit(_variableDeclarator), \loc=L(_variableDeclarator));
+       return varDecl([<buildIdentifier(id), buildInit(_variableDeclarator)>], \loc=L(_variableDeclarator));
     // TODO: no return? 
 }
     
-Identifier buildIdentifier(node id) {
-    if (str name:=id.name)
-        return identifier(name, \loc=L(id));
-}
+Expression buildIdentifier(node i) = id(name, \loc=L(i)) when str name := i.name;
     
-Init buildInit(node _variableDeclarator) {
-    if (_variableDeclarator.init? && node init:=_variableDeclarator.init) return Init::expression(buildExpression(init));
-        return Init::none();
+Expression buildInit(node _variableDeclarator) {
+    if (_variableDeclarator.init? && node init:=_variableDeclarator.init) 
+      return buildExpression(init);
+    return undefined();
 }
 
-SwitchCase buildSwitchCase(node _switchCase) {
+Statement buildSwitchCase(node _switchCase) {
   if (list[node] stats:= _switchCase.consequent) {
      if (_switchCase.\test? && node condition:=_switchCase.\test) 
         return switchCase(buildExpression(condition), 
@@ -217,22 +217,22 @@ SwitchCase buildSwitchCase(node _switchCase) {
   // TODO: no return?       
 }
 
-CatchClause buildCatchClause(node _catchClause) {
+Statement buildCatchClause(node _catchClause) {
     if (node param:=_catchClause.param && node _body:=_catchClause.body 
            && list[node] stats := _body.body && str name:=param.name) 
-        return catchClause(Pattern::variable(name), [buildStatement(stat)|stat<-stats], \loc=L(_catchClause));
+        return catchClause(variable(name), [buildStatement(stat)|stat<-stats], \loc=L(_catchClause));
     // TODO no return?      
 }
     
-tuple[LitOrId key, Expression \value, str kind]  buildObjectProperty(node _objectProperty) {
+tuple[Expression key, Expression \value, str kind]  buildObjectProperty(node _objectProperty) {
     if (node key:=_objectProperty.key && node val := _objectProperty.\value) {
         if (key.\type=="Identifier" && str name := key.name)
-            return <LitOrId::id(name), buildExpression(val), "">; 
+            return <id(name,\loc=L(key)), buildExpression(val), "">; 
         if ((key.\type=="StringLiteral"|| key.\type=="Literal") && str name := key.\value) { 
-            return <LitOrId::lit(string(name)), buildExpression(val), "">; 
+            return <string(name,\loc=L(key)), buildExpression(val), "">; 
         }
         if ((key.\type=="NumericLiteral" || key.\type=="Literal") && num v := key.\value) {
-            return <LitOrId::lit(number(v)), buildExpression(val), "">; 
+            return <number(v,\loc=L(key)), buildExpression(val), "">; 
         }
         println("<key.\type>"); 
     }       
@@ -254,7 +254,7 @@ Expression buildExpression(node _expression) {
             if (node left:=_expression.left 
              && node right:=_expression.right 
              && str operator:=_expression.operator)
-              return logical(buildExpression(left), buildLogicalOperator(operator), buildExpression(right));
+              return buildLogicalOperator(buildExpression(left), operator, buildExpression(right));
         case "ConditionalExpression": 
             if (node consequent:=_expression.consequent 
              && node alternate:=_expression.alternate 
@@ -267,32 +267,32 @@ Expression buildExpression(node _expression) {
          case "UpdateExpression":
              if (bool prefix:=_expression.prefix && node argument:= _expression.argument 
                   && str operator:=_expression.operator)
-                  return update(buildUpdateOperator(operator), buildExpression(argument), prefix, \loc=L(_expression));
+                  return buildUpdateOperator(operator, buildExpression(argument), prefix)[\loc=L(_expression)];
         case "NumericLiteral": {
             if (num v := _expression.\value)
-               return literal(number(v), \loc=L(_expression)); 
+               return number(v, \loc=L(_expression)); 
             }
          case "BooleanLiteral": {
             if (bool v := _expression.\value)
-               return literal(boolean(v), \loc=L(_expression)); 
+               return boolean(v, \loc=L(_expression)); 
             }
         case "Literal": {
-            if ((!_expression.\value?)) return literal(null()); 
+            if ((!_expression.\value?)) return null(\loc=L(_expression)); 
             if (bool v := _expression.\value)
-               return literal(boolean(v), \loc=L(_expression)); 
+               return boolean(v, \loc=L(_expression)); 
             if (num v := _expression.\value)
-               return literal(number(v), \loc=L(_expression));
+               return number(v, \loc=L(_expression));
             if (str v := _expression.\value)
-               return literal(string(v), \loc=L(_expression));  
+               return string(v, \loc=L(_expression));  
             }
-        case "NullLiteral": return literal(null()); 
+        case "NullLiteral": return null(\loc=L(_expression)); 
         case "StringLiteral": {
             if (str v := _expression.\value)
-               return literal(string(v), \loc=L(_expression)); 
+               return string(v, \loc=L(_expression)); 
             }
         case "RegExpLiteral": {
             if (str v := _expression.\pattern)
-               return literal(regExp(v), \loc=L(_expression)); 
+               return regExp(v, \loc=L(_expression)); 
             }
         case "ThisExpression": return this();
         case "Identifier": {
@@ -344,8 +344,9 @@ Expression buildExpression(node _expression) {
               } 
              }           
         } 
-    println(_expression.\type);                       
-    return literal(number(-1));
+        
+    throw "unexpected expression <_expression>";
+    //return number(-1);
 }
     
 Expression buildBinaryOperator(Expression l, str operator, Expression r) {
@@ -397,10 +398,6 @@ Expression buildAssignmentOperator(Expression lhs, str operator, Expression rhs)
    }
 }
 
-/* "-" | "+" | "!" | "~" | "typeof" | "void" | "delete" */
-
-/* min() | plus() | not() | bitNot() | typeOf() | \void() | delete();*/
-
 Expression buildUnaryOperator(Expression exp, str operator) {
     switch(operator) {
        case "-": return Expression::min(exp);
@@ -413,17 +410,15 @@ Expression buildUnaryOperator(Expression exp, str operator) {
     }
 }
     
-UpdateOperator buildUpdateOperator(str operator) {
-    switch(operator) {
-      case "++": return inc();
-      case "--": return dec();
-    }
-}
+Expression buildUpdateOperator("++", Expression e, true) = updatePreInc(e);
+Expression buildUpdateOperator("--", Expression e, true) = updatePreDec(e);
+Expression buildUpdateOperator("++", Expression e, false) = updatePostInc(e);
+Expression buildUpdateOperator("--", Expression e, false) = updatePostDec(e);
 
-LogicalOperator buildLogicalOperator(str operator) {
+Expression buildLogicalOperator(Expression lhs, str operator, Expression rhs) {
     switch(operator) {
-      case "&&": return LogicalOperator::and();
-      case "||": return LogicalOperator::or();
+      case "&&": return and(lhs, rhs);
+      case "||": return or(lhs, rhs);
     }
 }
 
