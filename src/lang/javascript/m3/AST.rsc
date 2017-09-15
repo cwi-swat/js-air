@@ -131,7 +131,18 @@ data Expression(loc \loc=|unknown:///|)
   | comma(Expression lhs, Expression rhs)
   | instanceOf(Expression lhs, Expression rhs) 
   | range(Expression lhs, Expression rhs)
-  | assignment(Expression left, AssignmentOperator assignOp,  Expression right) // TODO: inline expressions
+  | assign(Expression lhs, Expression rhs) 
+  | plusAssign(Expression lhs, Expression rhs) 
+  | minAssign(Expression lhs, Expression rhs) 
+  | timesAssign(Expression lhs, Expression rhs) 
+  | divAssign(Expression lhs, Expression rhs) 
+  | remAssign(Expression lhs, Expression rhs)
+  | shiftLeftAssign(Expression lhs, Expression rhs) 
+  | shiftRightAssign(Expression lhs, Expression rhs) 
+  | longShiftRightAssign(Expression lhs, Expression rhs)
+  | bitOrAssign(Expression lhs, Expression rhs) 
+  | bitXorAssign(Expression lhs, Expression rhs) 
+  | bitAndAssign(Expression lhs, Expression rhs)
   | update(UpdateOperator updateOp, Expression argument, bool prefix)
   | logical(Expression left, LogicalOperator logicalOp,  Expression right) // TODO: inline expressions
   | conditional(Expression \test, Expression consequent, Expression alternate) // TODO: inline expressions
@@ -197,11 +208,6 @@ data LogicalOperator(loc \loc=|unknown:///|)
   = or() | and()
   ;
 
-data AssignmentOperator(loc \loc=|unknown:///|)
-  = assign() | plusAssign() | minAssign() | timesAssign() | divAssign() |
-remAssign()
-  | shiftLeftAssign() | shiftRightAssign() | longShiftRightAssign()
-  | bitOrAssign() | bitXorAssign() | bitAndAssign();
 
 data UpdateOperator(loc \loc=|unknown:///|)
   = inc() | dec()

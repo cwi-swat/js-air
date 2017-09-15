@@ -302,7 +302,7 @@ Expression buildExpression(node _expression) {
         case "AssignmentExpression": {
             if (node left := _expression.left &&  
                 str operator := _expression.operator && node right:=_expression.right) {
-                return assignment(buildExpression(left), buildAssignmentOperator(operator),  buildExpression(right), \loc=L(_expression));
+                return buildAssignmentOperator(buildExpression(left), operator,  buildExpression(right))[\loc=L(_expression)];
                 }
             }
         case "CallExpression":
@@ -378,20 +378,22 @@ Expression buildBinaryOperator(Expression l, str operator, Expression r) {
 }
   
   
-AssignmentOperator buildAssignmentOperator(str operator) {
+Expression buildAssignmentOperator(Expression lhs, str operator, Expression rhs) {
    switch(operator) {
-      case "=": return assign();
-      case "+=": return plusAssign();
-      case "-=": return minAssign();
-      case "*=": return  timesAssign() ;
-      case  "/=": return divAssign();
-      case  "%=": return remAssign();
-      case "\<\<=": return shiftLeftAssign() ;
-      case  "\>\>=": return shiftRightAssign() ;
-      case  "\>\>\>=": return longShiftRightAssign();
-      case  "|=": return bitOrAssign();
-      case  "^=": return bitXorAssign();
-      case  "&=": return  bitAndAssign(); 
+      case "=": return assign(lhs,rhs);
+      case "+=": return plusAssign(lhs,rhs);
+      case "-=": return minAssign(lhs,rhs);
+      case "*=": return  timesAssign(lhs,rhs) ;
+      case  "/=": return divAssign(lhs,rhs);
+      case  "%=": return remAssign(lhs,rhs);
+      case "\<\<=": return shiftLeftAssign(lhs,rhs) ;
+      case  "\>\>=": return shiftRightAssign(lhs,rhs) ;
+      case  "\>\>\>=": return longShiftRightAssign(lhs,rhs);
+      case  "|=": return bitOrAssign(lhs,rhs);
+      case  "^=": return bitXorAssign(lhs,rhs);
+      case  "&=": return  bitAndAssign(lhs,rhs); 
+      default:
+        throw "unexpected assignment operator <operator>";
    }
 }
 
