@@ -42,11 +42,11 @@ loc L(node n) {
        )  {
          column1 += 1;
          column2 += 1;
-         println("col1 <column1> col2 <column2>");
+         //println("col1 <column1> col2 <column2>");
          offset = line2Offset[line1-1] + column1;
          endOffset = line2Offset[line2-1] + column2;
          len = endOffset - offset;
-         println("line1 <line1> offsetl1 <line2Offset[line1]>, line2 <line2> offsetl2 <line2Offset[line2]>, offset <offset>, len <len>");
+         //println("line1 <line1> offsetl1 <line2Offset[line1]>, line2 <line2> offsetl2 <line2Offset[line2]>, offset <offset>, len <len>");
        return str2loc(src)(offset, len, <line1, column1>, <line2, column2>);
     }
     
