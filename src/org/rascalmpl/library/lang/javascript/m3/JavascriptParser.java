@@ -1,5 +1,8 @@
 package org.rascalmpl.library.lang.javascript.m3;
 
+import org.rascalmpl.library.Prelude;
+
+import io.usethesource.vallang.ISourceLocation;
 import io.usethesource.vallang.IString;
 import io.usethesource.vallang.IValueFactory;
 import jdk.nashorn.internal.runtime.Context;
@@ -7,7 +10,7 @@ import jdk.nashorn.internal.runtime.ErrorManager;
 import jdk.nashorn.internal.runtime.ScriptRuntime;
 import jdk.nashorn.internal.runtime.options.Options;
 
-public class AST {
+public class JavascriptParser {
     // TODO: use babylon to parse the file instead of nashhorn?
     String program(String file) {
         return "var fs = require('fs');"
@@ -30,12 +33,12 @@ public class AST {
 
     protected final IValueFactory values;
 
-    public AST(IValueFactory values){
+    public JavascriptParser(IValueFactory values){
         super();		
         this.values = values;
     }
 
-    public String _parse(String iname, String code) { 
+    private String _parse(String iname, String code) { 
         Options options = new Options("nashorn");
         ErrorManager errors = new ErrorManager();
         Context contextm = new Context(options, errors, Thread.currentThread().getContextClassLoader());
@@ -46,4 +49,9 @@ public class AST {
     public IString _parse(IString iname, IString code) { 
         return values.string(_parse(iname.getValue(), code.getValue()));
     }
+    
+    public IString _parse(ISourceLocation loc) { 
+        return values.string(_parse(loc.getURI().toASCIIString(), ((IString) new Prelude(values).readFile(loc)).getValue()));
+    }
 }
+
