@@ -102,8 +102,13 @@ properties)
   //          str rest, // "" = null
   //          Expression expBody)
   | sequence(list[Expression] expressions)
-  | unary(UnaryOperator operator, Expression argument, bool prefix) // TODO: inline expressions
-  | binaryExpression(Expression left, BinaryOperator binaryOp, Expression right) // TODO: inline expressions
+  | min(Expression argument) | plus(Expression argument) | not(Expression argument) | bitNot(Expression argument) | typeOf(Expression argument) | \void(Expression argument) | delete(Expression argument)
+  | equals(Expression lhs, Expression rhs) | notEquals(Expression lhs, Expression rhs) | longEquals(Expression lhs, Expression rhs) | longNotEquals(Expression lhs, Expression rhs)
+  | lt(Expression lhs, Expression rhs) | leq(Expression lhs, Expression rhs) | gt(Expression lhs, Expression rhs) | geq(Expression lhs, Expression rhs)
+  | shiftLeft(Expression lhs, Expression rhs) | shiftRight(Expression lhs, Expression rhs) | longShiftRight(Expression lhs, Expression rhs)
+  | plus(Expression lhs, Expression rhs) | min(Expression lhs, Expression rhs) | times(Expression lhs, Expression rhs) | div(Expression lhs, Expression rhs) | rem(Expression lhs, Expression rhs)
+  | bitOr(Expression lhs, Expression rhs) | bitXor(Expression lhs, Expression rhs) | bitAnd(Expression lhs, Expression rhs) | \in(Expression lhs, Expression rhs) | comma(Expression lhs, Expression rhs)
+  | instanceOf(Expression lhs, Expression rhs) | range(Expression lhs, Expression rhs)
   | assignment(Expression left, AssignmentOperator assignOp,  Expression right) // TODO: inline expressions
   | update(UpdateOperator updateOp, Expression argument, bool prefix)
   | logical(Expression left, LogicalOperator logicalOp,  Expression right) // TODO: inline expressions
@@ -159,17 +164,12 @@ data Literal(loc \loc=|unknown:///|)
   
 data Identifier(loc \loc=|unknown:///|) = identifier(str strValue);     
 
-data UnaryOperator(loc \loc=|unknown:///|)
-  = min() | plus() | not() | bitNot() | typeOf() | \void() | delete();
+//data UnaryOperator(loc \loc=|unknown:///|)
+//  = 
 
-data BinaryOperator(loc \loc=|unknown:///|) // TODO: inline expressions
-  = equals() | notEquals() | longEquals() | longNotEquals()
-  | lt() | leq() | gt() | geq()
-  | shiftLeft() | shiftRight() | longShiftRight()
-  | plus() | min() | times() | div() | rem()
-  | bitOr() | bitXor() | bitAnd() | \in() | comma()
-  | instanceOf() | range()
-  ;
+//data BinaryOperator(loc \loc=|unknown:///|) // TODO: inline expressions
+//  
+//  ;
 
 data LogicalOperator(loc \loc=|unknown:///|)
   = or() | and()

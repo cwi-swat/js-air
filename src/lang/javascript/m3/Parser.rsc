@@ -249,7 +249,7 @@ Expression buildExpression(node _expression) {
             if (node left:=_expression.left 
              && node right:=_expression.right 
              && str operator:=_expression.operator)
-              return binaryExpression(buildExpression(left), buildBinaryOperator(operator), buildExpression(right));
+              return buildBinaryOperator(buildExpression(left), operator, buildExpression(right))[\loc=L(_expression)];
         case "LogicalExpression": 
             if (node left:=_expression.left 
              && node right:=_expression.right 
@@ -263,7 +263,7 @@ Expression buildExpression(node _expression) {
         case "UnaryExpression":
              if (bool prefix:=_expression.prefix && node argument:= _expression.argument 
                   && str operator:=_expression.operator)
-                  return unary(buildUnaryOperator(operator), buildExpression(argument), prefix, \loc=L(_expression));
+                  return buildUnaryOperator(buildExpression(argument), operator)[\loc=L(_expression)];
          case "UpdateExpression":
              if (bool prefix:=_expression.prefix && node argument:= _expression.argument 
                   && str operator:=_expression.operator)
@@ -348,32 +348,33 @@ Expression buildExpression(node _expression) {
     return literal(number(-1));
 }
     
-BinaryOperator buildBinaryOperator(str operator) {
+Expression buildBinaryOperator(Expression l, str operator, Expression r) {
    switch(operator) {
-      case "==": return equals(); 
-      case "!=":return notEquals();  
-   case "===":return longEquals(); 
-   case "!==":return longNotEquals();
-   case "\<":return lt() ;
-   case "\<=":return leq(); 
-   case "\>":return gt(); 
-   case "\>=":return geq();
-   case "\<\<":return shiftLeft(); 
-   case "\>\>":return shiftRight(); 
-   case "\>\>\>":return longShiftRight();
-   case "+":return BinaryOperator::plus(); 
-   case "-":return BinaryOperator::min(); 
-   case "*":return times();
-   case "/": return div(); 
-   case "%":return rem();
-   case "|":return bitOr(); 
-   case "^":return bitXor(); 
-   case "&":return bitAnd() ;
-   case ",":return comma() ;
-   case "in":return \in();
-   case "instanceof":return instanceOf();
+      case "==": return equals(l,r); 
+      case "!=":return notEquals(l,r);  
+      case "===":return longEquals(l,r); 
+      case "!==":return longNotEquals(l,r);
+      case "\<":return lt(l,r) ;
+      case "\<=":return leq(l,r); 
+      case "\>":return gt(l,r); 
+      case "\>=":return geq(l,r);
+      case "\<\<":return shiftLeft(l,r); 
+      case "\>\>":return shiftRight(l,r); 
+      case "\>\>\>":return longShiftRight(l,r);
+      case "+":return Expression::plus(l,r); 
+      case "-":return Expression::min(l,r); 
+      case "*":return times(l,r);
+      case "/": return div(l,r); 
+      case "%":return rem(l,r);
+      case "|":return bitOr(l,r); 
+      case "^":return bitXor(l,r); 
+      case "&":return bitAnd(l,r) ;
+      case ",":return comma(l,r) ;
+      case "in":return \in(l,r);
+      case "instanceof":return instanceOf(l,r);
+      default: 
+        throw "unsupported operator <operator>";
     }
-    println(operator);
 }
   
   
@@ -398,15 +399,15 @@ AssignmentOperator buildAssignmentOperator(str operator) {
 
 /* min() | plus() | not() | bitNot() | typeOf() | \void() | delete();*/
 
-UnaryOperator buildUnaryOperator(str operator) {
+Expression buildUnaryOperator(Expression exp, str operator) {
     switch(operator) {
-       case "-": return UnaryOperator::min();
-       case "+": return UnaryOperator::plus();
-       case "!": return UnaryOperator::not();
-       case "~": return UnaryOperator::bitNot();
-       case "typeof": return UnaryOperator::typeOf();
-       case "void": return UnaryOperator::\void();
-       case "delete": return UnaryOperator::delete();
+       case "-": return Expression::min(exp);
+       case "+": return Expression::plus(exp);
+       case "!": return Expression::not(exp);
+       case "~": return Expression::bitNot(exp);
+       case "typeof": return Expression::typeOf(exp);
+       case "void": return Expression::\void(exp);
+       case "delete": return Expression::delete(exp);
     }
 }
     
