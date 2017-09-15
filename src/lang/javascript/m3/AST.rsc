@@ -15,11 +15,11 @@ module lang::javascript::m3::AST
 
 extend analysis::m3::AST;
 
-data Program(loc \loc=|unknown:///|)
+data Declaration
   = program(list[Statement] stats)
   ;
 
-data Statement(loc \loc=|unknown:///|)
+data Statement
   = empty()
   | block(list[Statement] stats)
   | block(Statement stat)
@@ -57,7 +57,7 @@ data Statement(loc \loc=|unknown:///|)
   | varDecl(lrel[Expression id, Expression init] declarations)
   ;
 
-data Expression(loc \loc=|unknown:///|)
+data Expression
   = this()
   | array(list[Expression] elements)
   | object(lrel[Expression key, Expression \value, str kind] properties)
@@ -136,6 +136,4 @@ data Expression(loc \loc=|unknown:///|)
   | number(num numValue)
   | regExp(str regexp)
   ;
-
-data ErrorNode = errorNode(str error);
 
