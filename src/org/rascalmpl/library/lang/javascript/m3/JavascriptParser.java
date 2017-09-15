@@ -56,8 +56,8 @@ public class JavascriptParser {
         return ScriptRuntime.parse(code, iname, true);
     }
 
-    public IString _parse(IString iname, IString code) { 
-        return values.string(_parse(iname.getValue(), code.getValue()));
+    public IString _parse(ISourceLocation loc, IString code) { 
+        return values.string(_parse(loc.getURI().toASCIIString(), code.getValue()));
     }
     
     public IString _parse(ISourceLocation loc) { 

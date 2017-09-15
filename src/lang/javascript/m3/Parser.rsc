@@ -22,13 +22,16 @@ import List;
 import Node;
 import lang::json::IO;
 import util::ShellExec;
-
+import ValueIO;
 
 list[int] line2Offset = [];
 
 Program parseJavascript(loc js) {
-   src = _parse(js);
-   json = parseJSON(#node, src, implicitConstructors=true, implicitNodes=true);
+   code = readFile(js);
+   line2Offset = [0]+findAll(code, "\n");
+   str src = _parse(js, code);
+   node json = parseJSON(#node, src, implicitConstructors=true, implicitNodes=true);
+   println(json);
    return buildProgram(json);
 }
 
@@ -37,11 +40,14 @@ loc L(node n) {
           && node end:=location.end && int line1:=\start.line && int column1:=\start.column
           && int line2:=\end.line && int column2:=\end.column
        )  {
-       return |file://<src>|(line2Offset[line1]+1+column1, line2Offset[line2]+1+column2, <line1, column1>, <line2, column2>);
+       return str2loc(src)(line2Offset[line1]+1+column1, line2Offset[line2]+1+column2, <line1, column1>, <line2, column2>);
     }
     
     return |file:///|; 
 }
+
+private loc str2loc(str s)
+  = readTextValueString(#loc, "|<s>|");
 
 Program build(node file) {
    if (node program:=file.program) 
@@ -413,3 +419,6 @@ LogicalOperator buildLogicalOperator(str operator) {
 
 @javaClass{org.rascalmpl.library.lang.javascript.m3.JavascriptParser}
 private java str _parse(loc file);
+
+@javaClass{org.rascalmpl.library.lang.javascript.m3.JavascriptParser}
+private java str _parse(loc src, str code);
