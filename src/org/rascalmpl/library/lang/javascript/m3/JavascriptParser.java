@@ -61,7 +61,8 @@ public class JavascriptParser {
     }
     
     public IString _parse(ISourceLocation loc) { 
-        return values.string(_parse(loc.getURI().toASCIIString(), ((IString) new Prelude(values).readFile(loc)).getValue()));
+    	
+        return values.string(_parse(loc.getURI().toASCIIString(), Prelude.readFile(values, false, loc).getValue()));
     }
 }
 

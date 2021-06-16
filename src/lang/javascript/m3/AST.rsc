@@ -112,7 +112,7 @@ data Expression
   | updatePostInc(Expression argument)
   | or(Expression lhs,  Expression rhs) 
   | and(Expression lhs,  Expression rhs)
-  | conditional(Expression \test, Expression consexp, Expression altexp) // TODO: inline expressions
+  | conditional(Expression \test, Expression consexp, Expression altexp)
   | new(Expression callee, list[Expression] arguments)
   | call(Expression callee, list[Expression] arguments)
   | member(Expression object, str strProperty)

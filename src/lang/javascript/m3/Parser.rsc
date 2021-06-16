@@ -64,6 +64,9 @@ private &T cast(type[&T] t, value x) {
   }
 }
 
+private node \node(value x) = cast(#node, x);
+private list[node] \nodes(list[value] x) = cast(#list[node], x);
+
 Declaration build(node file) = buildProgram(cast(#node, file.program));
 
 Declaration buildProgram(node _program) 
@@ -193,19 +196,12 @@ Statement buildStatement(node _statement) {
 }
     
     
-Statement buildVariableDeclarator(node _variableDeclarator) {
-    if (node id:=_variableDeclarator.id)
-       return varDecl([<buildIdentifier(id), buildInit(_variableDeclarator)>], src=L(_variableDeclarator));
-    // TODO: no return? 
-}
+Statement buildVariableDeclarator(node _variableDeclarator) 
+  = varDecl([<buildIdentifier(\node(_variableDeclarator.id)), buildInit(_variableDeclarator)>], src=L(_variableDeclarator));
     
-Expression buildIdentifier(node i) = id(name, src=L(i)) when str name := i.name;
+Expression buildIdentifier(node i) = id(cast(#str, i.name), src=L(i));
     
-Expression buildInit(node _variableDeclarator) {
-    if (_variableDeclarator.init? && node init:=_variableDeclarator.init) 
-      return buildExpression(init);
-    return undefined();
-}
+Expression buildInit(node _variableDeclarator) = _variableDeclarator.init? ? buildExpression(\node(_variableDeclarator.init)) : undefined(); 
 
 Statement buildSwitchCase(node _switchCase) {
   if (list[node] stats:= _switchCase.consequent) {
@@ -408,6 +404,8 @@ Expression buildUnaryOperator(Expression exp, str operator) {
        case "void": return Expression::\void(exp);
        case "delete": return Expression::delete(exp);
     }
+    
+    throw "unknown unary operator <operator>";
 }
     
 Expression buildUpdateOperator("++", Expression e, true) = updatePreInc(e);
@@ -420,6 +418,8 @@ Expression buildLogicalOperator(Expression lhs, str operator, Expression rhs) {
       case "&&": return and(lhs, rhs);
       case "||": return or(lhs, rhs);
     }
+    
+    throw "unknown logical operator <operator>";
 }
 
 @javaClass{org.rascalmpl.library.lang.javascript.m3.JavascriptParser}
