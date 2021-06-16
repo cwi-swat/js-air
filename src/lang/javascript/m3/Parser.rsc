@@ -210,14 +210,16 @@ Statement buildSwitchCase(node _switchCase) {
         [buildStatement(stat)|stat<-stats]);  
      return switchCase([buildStatement(stat)|stat<-stats], src=L(_switchCase));
      }
-  // TODO: no return?       
+
+  throw "unexpected case <_switchCase>";      
 }
 
 Statement buildCatchClause(node _catchClause) {
     if (node param:=_catchClause.param && node _body:=_catchClause.body 
            && list[node] stats := _body.body && str name:=param.name) 
         return catchClause(variable(name), [buildStatement(stat)|stat<-stats], src=L(_catchClause));
-    // TODO no return?      
+   
+    throw "unexpected catch <_catchClause>";
 }
     
 tuple[Expression key, Expression \value, str kind]  buildObjectProperty(node _objectProperty) {
@@ -233,7 +235,7 @@ tuple[Expression key, Expression \value, str kind]  buildObjectProperty(node _ob
         println("<key.\type>"); 
     }       
     
-    // TODO no return?     
+    throw "unexpected property <_objectProperty>";
 }
 
 //member(Expression object, str strProperty)
