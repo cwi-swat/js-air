@@ -60,7 +60,7 @@ private &T cast(type[&T] t, value x) {
   if (&T v := x) {
     return v;
   } else {
-    throw "expected <t> but got <Type::typeOf(x)>";
+    throw "expected <t> but got <x>";
   }
 }
 
@@ -193,6 +193,8 @@ Statement buildStatement(node _statement) {
                    }            
             }
       }
+
+      throw "unexpected statement <_statement>";
 }
     
     
