@@ -16,7 +16,6 @@ module lang::javascript::m3::Parser
 extend lang::javascript::m3::AST;
 
 import IO;
-import Set;
 import String;
 import List;
 import Node;
